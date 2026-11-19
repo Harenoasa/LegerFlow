@@ -1,0 +1,54 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="
+           http://maven.apache.org/POM/4.0.0
+           https://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.ledgerflow</groupId>
+    <artifactId>ledgerflow</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <packaging>pom</packaging>
+    <name>ledgerflow</name>
+    <description>ledgerflow</description>
+
+    <modules>
+        <module>common</module>
+        <module>payment-service</module>
+        <!-- 未来真正拆出独立订单/记账应用时再启用；当前订单/商品仍在 ledgerflow-common 中 -->
+<!--        <module>order-service</module>-->
+<!--        <module>accounting-service</module>-->
+    </modules>
+
+    <!-- 统一 Spring Boot 依赖版本 -->
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>4.1.2</version>
+        <relativePath/>
+    </parent>
+
+    <properties>
+        <java.version>25</java.version>
+        <maven.compiler.release>25</maven.compiler.release>
+        <mybatis-plus.version>3.5.18</mybatis-plus.version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <!-- 模块间依赖版本统一由根 POM 管理 -->
+            <dependency>
+                <groupId>com.ledgerflow</groupId>
+                <artifactId>common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.baomidou</groupId>
+                <artifactId>mybatis-plus-spring-boot4-starter</artifactId>
+                <version>${mybatis-plus.version}</version>
+            </dependency>
+
+        </dependencies>
+    </dependencyManagement>
+
+</project>

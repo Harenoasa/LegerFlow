@@ -1,0 +1,4 @@
+logging:
+  level:
+    com.harenoasa.ledgerflow.payment: DEBUG
+    com.harenoasa.ledgerflow.payment.mapper: DEBUG

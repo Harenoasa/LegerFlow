@@ -1,0 +1,89 @@
+### 下单接口测试报文（IntelliJ HTTP Client）
+### 接口：POST /api/orders（CreateOrderController）
+### 前置：执行过 db/demo/seed.sql；应用默认端口 8080
+### 用户态：暂由 X-User-Id 模拟，seed 中用户 1 拥有地址 1、2，用户 2 拥有地址 3、4
+### 注意：成功请求会真实扣减库存并写入订单，重复执行前可用 db/demo/reset.sql + seed.sql 重置
+
+### 1. 最小可用下单：单 SKU，金额校验通过
+### 预期：201 Created，返回 {"orderNo":"LF...","orderStatus":"PENDING_PAYMENT"}
+POST http://localhost:8080/api/orders
+Content-Type: application/json
+X-User-Id: 1
+
+{
+  "clientToken": "test-single-0001",
+  "addressId": 1,
+  "items": [
+    { "skuId": 5, "quantity": 2 }
+  ],
+  "expectedPayAmount": 198.00
+}
+
+### 2. 多 SKU + 同一 SKU 重复行合并 + 买家备注
+### skuId=11 出现两行（2 + 1），服务端合并为 1 条流水数量 3
+### 预期：201 Created；total/pay = 899.00 + 79.00 × 3 = 1136.00
+POST http://localhost:8080/api/orders
+Content-Type: application/json
+X-User-Id: 2
+
+{
+  "clientToken": "test-multi-0002",
+  "addressId": 3,
+  "items": [
+    { "skuId": 3, "quantity": 1 },
+    { "skuId": 11, "quantity": 2 },
+    { "skuId": 11, "quantity": 1 }
+  ],
+  "buyerRemark": "工作日白天送货，放前台即可",
+  "expectedPayAmount": 1136.00,
+  "payChannel": "WECHAT",
+  "source": "APP"
+}
+
+### 3. 价格变化：客户端期望金额与服务端重算不一致
+### 实际应付 = 99.00 × 2 = 198.00，期望传 199.00
+### 预期：409 Conflict，body 为 PRICE_CHANGED；校验发生在锁库存之前，不改库存
+POST http://localhost:8080/api/orders
+Content-Type: application/json
+X-User-Id: 1
+
+{
+  "clientToken": "test-price-0003",
+  "addressId": 1,
+  "items": [
+    { "skuId": 5, "quantity": 2 }
+  ],
+  "expectedPayAmount": 199.00
+}
+
+### 4. 收货地址不存在：addressId 不属于当前用户或已删除
+### 预期：404 Not Found，body 为 ADDRESS_NOT_FOUND
+POST http://localhost:8080/api/orders
+Content-Type: application/json
+X-User-Id: 1
+
+{
+  "clientToken": "test-address-0004",
+  "addressId": 9999,
+  "items": [
+    { "skuId": 5, "quantity": 1 }
+  ]
+}
+
+### 5. 库存不足：skuId=16 可用库存 19，请求 999
+### 预期：409 Conflict，body 为 OUT_OF_STOCK；事务回滚，不产生订单/流水
+### 补充：传不存在的 skuId（如 9999）会得到 409 SKU_OFF_SHELF
+POST http://localhost:8080/api/orders
+Content-Type: application/json
+X-User-Id: 1
+
+{
+  "clientToken": "test-stock-0005",
+  "addressId": 1,
+  "items": [
+    { "skuId": 16, "quantity": 999 }
+  ]
+}
+
+
+

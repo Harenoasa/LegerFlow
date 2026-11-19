@@ -1,0 +1,62 @@
+server:
+  port: ${SERVER_PORT:8081}
+
+spring:
+  application:
+    name: payment-service
+  datasource:
+    url: ${DB_URL:jdbc:mysql://127.0.0.1:3306/ledgerflow?useSSL=false&allowPublicKeyRetrieval=true&connectionTimeZone=UTC&characterEncoding=UTF-8&rewriteBatchedStatements=true}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:123123}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 3000
+  flyway:
+    enabled: true
+    # 迁移脚本在 ledgerflow-common 的 jar 里，两个应用共用同一份 history
+    locations: classpath:db/migration
+    encoding: UTF-8
+    validate-on-migrate: true
+    clean-disabled: true
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP:localhost:9092}
+    producer:
+      acks: all
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      properties:
+        enable.idempotence: true
+        max.in.flight.requests.per.connection: 5
+    consumer:
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+
+mybatis:
+  configuration:
+    map-underscore-to-camel-case: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+
+ledgerflow:
+  snowflake:
+    # 与 ledgerflow-common 同库部署时，两个进程必须使用不同的 worker-id
+    worker-id: ${SNOWFLAKE_WORKER_ID:1}
+    datacenter-id: ${SNOWFLAKE_DATACENTER_ID:0}
+  payment:
+    mock:
+      # Mock 渠道用 HMAC-SHA256 模拟验签，仅用于本地联调
+      secret: ${MOCK_PAY_SECRET:mock-pay-secret}
+      pay-base-url: ${MOCK_PAY_BASE_URL:http://localhost:5173/mock-pay}
+  outbox:
+    # 先写 outbox_event；Kafka 可用后再打开投递器
+    publisher-enabled: ${OUTBOX_PUBLISHER_ENABLED:false}
+    batch-size: 100
+    poll-interval-ms: 1000
+    payment-topic: ledgerflow.payment.events.v1
+    refund-topic: ledgerflow.refund.events.v1
