@@ -32,7 +32,7 @@ docker compose up -d
 docker exec -i ledgerflow-mysql mysql -uroot -p123123 ledgerflow < db/demo/seed.sql
 
 # 3. 订单/商品服务（默认 8080；该模块目前也承载 payment-service 的共享域模型）
-cd ledgerflow-common && bash mvnw spring-boot:run
+mvn -pl common spring-boot:run
 
 # 4. 支付服务（另开终端，在仓库根目录执行；默认 8081，dev profile 才会启用 Mock 收银台）
 mvn -DskipTests package

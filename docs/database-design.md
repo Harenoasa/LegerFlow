@@ -19,7 +19,7 @@
 docker compose up -d
 
 # 2. 启动应用，让 Flyway 建表；看到迁移成功后 Ctrl+C
-sh ledgerflow-common/mvnw spring-boot:run
+mvn -pl common spring-boot:run
 
 # 3. 导入样例数据
 docker exec -i -e MYSQL_PWD=123123 ledgerflow-mysql \

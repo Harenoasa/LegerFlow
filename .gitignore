@@ -1,1 +1,35 @@
 .idea/
+
+# Maven
+target/
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+/common/HELP.md
+/common/.mvn/wrapper/maven-wrapper.jar
+
+# Java IDEs
+/common/.apt_generated
+/common/.classpath
+/common/.factorypath
+/common/.project
+/common/.settings
+/common/.springBeans
+/common/.sts4-cache
+/common/*.iws
+/common/*.iml
+/common/*.ipr
+/common/nbproject/private/
+/common/nbbuild/
+/common/dist/
+/common/nbdist/
+/common/**/build/
+!/common/src/main/**/build/
+!/common/src/test/**/build/
+/common/.vscode/
+
+# Frontend
+/frontend/**/node_modules/
+/frontend/**/dist/
+/frontend/**/*.local
+/frontend/**/.DS_Store
