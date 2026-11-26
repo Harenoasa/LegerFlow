@@ -3,10 +3,11 @@
 > 结论基于当前仓库的 README、V1–V7 迁移脚本、`CreateService` 和前端结算流程。
 > 最后更新：2026-11-03。
 >
-> **实现说明（2026-11-11）**：当前仓库已把支付实现为独立进程 `payment-service`（8081），
-> 与订单应用共享 MySQL、实体和 Mapper；本文 2.12 节的“包内模块化单体”是更早的方案建议。
-> 两种结构的取舍、当前边界和拆分时机见 [`module-design.md`](module-design.md)，
-> 支付模块职责速览见 [`payment-module.md`](payment-module.md)。
+> **实现说明（2026-11-26）**：支付模块现在位于单体应用 `ledgerflow-app` 的
+> `com.ledgerflow.payment` 包，默认 8080，与订单、库存、Outbox 共享 MySQL 和本地事务。
+> 本文 1.1 节的现状盘点停留在 2026-11-03，部分结论已过期；当前运行方式见
+> [`payment-api.md`](payment-api.md)，模块边界见 [`module-design.md`](module-design.md)，
+> 支付职责速览见 [`payment-module.md`](payment-module.md)。
 
 ## 0. 一页结论
 
@@ -42,7 +43,7 @@
 | 下单 | `POST /api/orders` 已实现：地址/SKU 校验、价格校验、锁库存、写订单/明细/状态日志 | `CreateService.java`、`CreateOrderController.java` |
 | 幂等 | V7 已加 `orders.client_token`、`request_hash`、`uk_user_client_token` | `V7__order_idempotency.sql` |
 | 前端 | 商品浏览 → 购物车 → 创建订单 → “正在跳转支付界面”结束 | `frontend/src/components/CheckoutModal.vue:134` |
-| 消息 | `spring-boot-starter-kafka` 已在依赖里，但没有配置、没有 compose 服务、没有生产者/消费者 | `../common`、`compose.yml` |
+| 消息 | `spring-boot-starter-kafka` 已在依赖里，但没有 compose 服务、没有消费者 | `ledgerflow-app`、`compose.yml` |
 | 支付 | **没有 Java 代码**，订单创建后停在 `PENDING_PAYMENT` | `README.md:40` |
 
 ### 1.2 关键缺口
@@ -476,23 +477,25 @@ refund_order.channel_refund_no 渠道退款单号
 沿用当前模块化单体，不急着拆服务：
 
 ```text
-com.harenoasa.ledgerflowcommon
+com.ledgerflow
 ├─ payment
 │  ├─ controller/PaymentController.java
 │  ├─ controller/MockChannelController.java      # @Profile("dev")
 │  ├─ service/PaymentService.java                # 创建支付单
 │  ├─ service/PaymentCallbackService.java        # 回调事务
-│  ├─ service/PaymentTimeoutJob.java             # 超时关单
+│  ├─ service/RefundService.java                 # 退款单创建
 │  ├─ channel/PayChannel.java                    # 渠道接口
 │  ├─ channel/MockPayChannel.java                # 模拟渠道
-│  ├─ mapper/...                                 # JdbcTemplate 或 MyBatis
+│  ├─ mapper/...                                 # MyBatis Mapper
 │  └─ dto/...
 ├─ outbox
 │  ├─ OutboxAppender.java                        # 事务内写事件
 │  └─ OutboxPublisher.java                       # 定时投递 Kafka
-├─ ledger                                        # 第三阶段
-└─ common
+├─ ledger                                        # 第三阶段，目前留空
+└─ common                                        # 雪花 ID、单号、状态枚举
 ```
+
+`PaymentTimeoutJob`（超时关单）尚未实现，未创建对应类。
 
 说明：
 

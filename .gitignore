@@ -5,28 +5,28 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 
-/common/HELP.md
-/common/.mvn/wrapper/maven-wrapper.jar
+/ledgerflow-app/HELP.md
+/ledgerflow-app/.mvn/wrapper/maven-wrapper.jar
 
 # Java IDEs
-/common/.apt_generated
-/common/.classpath
-/common/.factorypath
-/common/.project
-/common/.settings
-/common/.springBeans
-/common/.sts4-cache
-/common/*.iws
-/common/*.iml
-/common/*.ipr
-/common/nbproject/private/
-/common/nbbuild/
-/common/dist/
-/common/nbdist/
-/common/**/build/
-!/common/src/main/**/build/
-!/common/src/test/**/build/
-/common/.vscode/
+/ledgerflow-app/.apt_generated
+/ledgerflow-app/.classpath
+/ledgerflow-app/.factorypath
+/ledgerflow-app/.project
+/ledgerflow-app/.settings
+/ledgerflow-app/.springBeans
+/ledgerflow-app/.sts4-cache
+/ledgerflow-app/*.iws
+/ledgerflow-app/*.iml
+/ledgerflow-app/*.ipr
+/ledgerflow-app/nbproject/private/
+/ledgerflow-app/nbbuild/
+/ledgerflow-app/dist/
+/ledgerflow-app/nbdist/
+/ledgerflow-app/**/build/
+!/ledgerflow-app/src/main/**/build/
+!/ledgerflow-app/src/test/**/build/
+/ledgerflow-app/.vscode/
 
 # Frontend
 /frontend/**/node_modules/

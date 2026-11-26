@@ -569,27 +569,31 @@ createdAt
 ## 附录：DTO 类结构建议
 
 ```text
-com.harenoasa.ledgerflowcommon.dto.request
+com.ledgerflow.order.dto.request
 ├─ CreateOrderRequestDTO
 └─ CreateOrderItemRequestDTO
 
-com.harenoasa.ledgerflowcommon.dto.response
+com.ledgerflow.order.dto.response
 ├─ CreateOrderResponseDTO
 ├─ OrderItemDTO
 ├─ ReceiverDTO
 ├─ AppliedCouponDTO
 └─ PaymentInfoDTO
 
-com.harenoasa.ledgerflowcommon.enums
+com.ledgerflow.common
 ├─ OrderStatusEnum
 ├─ CouponTypeEnum
 ├─ PayChannelEnum
 └─ PaymentStatusEnum
 
-com.harenoasa.ledgerflowcommon.common
+com.ledgerflow.common
 ├─ ApiErrorResponse
 └─ FieldErrorDTO
 ```
+
+> 以上为建议结构；当前已实现的是 `CreateOrderRequest` / `CreateOrderItemRequest`、
+> `CreateOrderResponseDTO`，以及 `com.ledgerflow.common` 下的 `OrderStatus` / `PaymentStatus`。
+> 其余 DTO/枚举尚未实现。
 
 序列化建议：
 

@@ -13,11 +13,10 @@
     <description>ledgerflow</description>
 
     <modules>
-        <module>common</module>
-        <module>payment-service</module>
-        <!-- 未来真正拆出独立订单/记账应用时再启用；当前订单/商品仍在 ledgerflow-common 中 -->
-<!--        <module>order-service</module>-->
-<!--        <module>accounting-service</module>-->
+        <module>ledgerflow-common</module>
+        <module>ledgerflow-app</module>
+        <!-- 记账消费者独立进程时再启用 -->
+<!--        <module>ledger-worker</module>-->
     </modules>
 
     <!-- 统一 Spring Boot 依赖版本 -->
@@ -39,7 +38,7 @@
             <!-- 模块间依赖版本统一由根 POM 管理 -->
             <dependency>
                 <groupId>com.ledgerflow</groupId>
-                <artifactId>common</artifactId>
+                <artifactId>ledgerflow-common</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -47,7 +46,6 @@
                 <artifactId>mybatis-plus-spring-boot4-starter</artifactId>
                 <version>${mybatis-plus.version}</version>
             </dependency>
-
         </dependencies>
     </dependencyManagement>
 

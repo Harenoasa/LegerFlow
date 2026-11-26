@@ -2,12 +2,12 @@
 
 一个用于学习真实电商消费场景的 Spring Boot + MySQL 项目。数据库层包含
 23 张业务表、Flyway V1–V8 迁移、可重复导入的样例数据、对账/并发/索引演示脚本和中文设计文档。
-当前已实现订单/商品接口与独立的 `payment-service`；模块划分见
+当前已实现订单/商品接口与单体应用内的支付模块；模块划分见
 [`module-design.md`](module-design.md)，支付职责见 [`payment-module.md`](payment-module.md)。
 
 ## 技术栈
 
-- Java 25 / Spring Boot 4.1.2（多模块，目前启用 `common` 与 `payment-service`）
+- Java 25 / Spring Boot 4.1.2（多模块：`ledgerflow-common` + `ledgerflow-app`）
 - MySQL 8.4.11（Docker Compose，InnoDB，utf8mb4）
 - Flyway 12.4（启动时自动迁移）
 - MyBatis 4.0.1（已配置，尚未写 Mapper）
@@ -19,7 +19,8 @@
 docker compose up -d
 
 # 2. 启动应用，让 Flyway 建表；看到迁移成功后 Ctrl+C
-mvn -pl common spring-boot:run
+mvn -DskipTests package
+java -jar ledgerflow-app/target/ledgerflow-app-0.0.1-SNAPSHOT.jar
 
 # 3. 导入样例数据
 docker exec -i -e MYSQL_PWD=123123 ledgerflow-mysql \
@@ -40,7 +41,8 @@ docker exec -i -e MYSQL_PWD=123123 ledgerflow-mysql \
 
 ```
 compose.yml                 MySQL 8.4（root/123123，仅本地）
-ledgerflow-common/          Spring Boot 模块（数据源 + Flyway）
+ledgerflow-common/          共享技术内核（纯 jar）
+ledgerflow-app/             单体应用（数据源 + Flyway + 业务包）
 db/
 ├── README.md               数据库设计主文档
 ├── demo/seed.sql           样例数据（8 条自检）

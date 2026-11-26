@@ -31,12 +31,12 @@ docker ps --filter name=ledgerflow-mysql
 应用启动时会自动执行 `classpath:db/migration` 下的迁移：
 
 ```bash
-sh ledgerflow-common/mvnw spring-boot:run
+mvn -DskipTests package
+java -jar ledgerflow-app/target/ledgerflow-app-0.0.1-SNAPSHOT.jar
 # 看到 “Successfully applied ... migrations” 后 Ctrl+C 即可
 ```
 
-`payment-service` 启动时也会执行同一份迁移；两个应用共用 `flyway_schema_history`，
-先启动哪个都可以（Flyway 会加锁串行执行）。
+只有 `ledgerflow-app` 执行迁移，`flyway_schema_history` 也只有一份。
 
 已有迁移记录时不会重复建表。检查：
 
@@ -108,7 +108,8 @@ docker exec -i -e MYSQL_PWD=123123 ledgerflow-mysql \
 ```bash
 docker compose down -v      # 危险：删除 mysql-data 卷
 docker compose up -d
-sh ledgerflow-common/mvnw spring-boot:run   # 重新跑 Flyway
+mvn -DskipTests package
+java -jar ledgerflow-app/target/ledgerflow-app-0.0.1-SNAPSHOT.jar   # 重新跑 Flyway
 ```
 
 ---
@@ -698,7 +699,7 @@ A：`docker exec` 的终端/客户端字符集显示问题，表注释本身是 
 用 `--default-character-set=utf8mb4` 并确保终端支持 UTF-8。
 
 **Q：`./mvnw` 报 Permission denied？**
-A：用 `sh ledgerflow-common/mvnw ...`。
+A：在仓库根目录用系统 `mvn`，或 `sh ledgerflow-app/mvnw ...`。
 
 **Q：Flyway 报 checksum mismatch？**
 A：说明改过已应用的迁移。不要改历史文件；新增版本迁移，或仅在本地重建库
@@ -731,7 +732,7 @@ ledgerflow/
 │   │   └── 04_index_explain.sql      # EXPLAIN、深分页、索引失效
 │   └── optional/
 │       └── foreign_keys.sql          # 34 条物理外键（学习用，默认不执行）
-└── ledgerflow-common/
+└── ledgerflow-app/
     └── src/main/resources/
         ├── application.yaml          # 数据源 + Flyway（env 可覆盖）
         └── db/migration/

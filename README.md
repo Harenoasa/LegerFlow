@@ -14,7 +14,7 @@
 
 - 后端 `POST /api/orders`：校验地址 / SKU、价格校验、锁定库存、写入订单 / 明细 / 状态日志
 - 后端 `GET /api/products?limit=100`：首页商品列表（按 SPU 聚合 SKU 价格与库存，最多 100 条）
-- 支付子模块 `payment-service`：创建支付单、Mock 渠道回调、回调幂等、晚到/重复支付退款、Outbox 事件，详见 [`payment-service/README.md`](payment-service/README.md)
+- 支付模块（`ledgerflow-app` 的 `payment` 包）：创建支付单、Mock 渠道回调、回调幂等、晚到/重复支付退款、Outbox 事件，详见 [`docs/payment-api.md`](docs/payment-api.md)
 - 前端 `frontend/`：Vue 3 + Vite + TypeScript 商城，支持商品浏览、搜索、分类筛选、加入购物车、购物车结算，以及“订单创建中 → 正在跳转支付界面”的结算弹层
 
 **模块说明**
@@ -31,14 +31,11 @@ docker compose up -d
 # 2. 初始化演示数据（仅在空库时执行，会写入 10 个 SPU / 20 个 SKU）
 docker exec -i ledgerflow-mysql mysql -uroot -p123123 ledgerflow < db/demo/seed.sql
 
-# 3. 订单/商品服务（默认 8080；该模块目前也承载 payment-service 的共享域模型）
-mvn -pl common spring-boot:run
-
-# 4. 支付服务（另开终端，在仓库根目录执行；默认 8081，dev profile 才会启用 Mock 收银台）
+# 3. 构建并启动单体应用（默认 8080；dev profile 才启用 Mock 收银台）
 mvn -DskipTests package
-java -jar payment-service/target/payment-service-0.0.1-SNAPSHOT.jar --spring.profiles.active=dev
+java -jar ledgerflow-app/target/ledgerflow-app-0.0.1-SNAPSHOT.jar --spring.profiles.active=dev
 
-# 5. 前端（另开终端，需要 Node 22+）
+# 4. 前端（另开终端，需要 Node 22+）
 cd frontend && npm install && npm run dev
 ```
 
@@ -47,8 +44,8 @@ cd frontend && npm install && npm run dev
 **注意**
 
 - 结算使用 seed 用户 1 的收货地址 `addressId=1`，会真实创建订单并锁定库存
-- 支付服务已实现 Mock 渠道全链路，但前端还没有支付页；订单创建后仍停在 `PENDING_PAYMENT`，可用 `payment-service/README.md` 中的 curl 完成支付
-- 首次启动任一应用会自动执行 Flyway V1–V8（支付幂等、订单结算唯一约束、`processed_event`）
+- 支付模块已实现 Mock 渠道全链路，但前端还没有支付页；订单创建后仍停在 `PENDING_PAYMENT`，可用 [`docs/payment-api.md`](docs/payment-api.md) 中的 curl 完成支付
+- 首次启动应用会自动执行 Flyway V1–V8（支付幂等、订单结算唯一约束、`processed_event`）
 - 重复演示前可用 `db/demo/reset.sql` + `db/demo/seed.sql` 重置数据（会清空业务数据）
 
 ## 核心架构
@@ -88,17 +85,19 @@ cd frontend && npm install && npm run dev
 
 第一版建议先做“模块化单体”，一个 Spring Boot 工程内分模块：
 
-- `order`
-- `payment`
+- `catalog`
 - `inventory`
-- `ledger`
+- `order`
+- `checkout`
+- `payment`
 - `outbox`
-- `search`
 - `common`
+- `ledger`（未实现，留空）
+- `search`（未实现，留空）
 
-Kafka、MySQL、ES 都是真的外部组件。等流程跑通后，再把 `payment` 和 `ledger` 拆为独立服务。这样不会陷入 Docker 和微服务配置地狱。
+Kafka、MySQL、ES 都是真的外部组件。先把交易链路跑通，再把记账消费者 `ledger` 拆为独立进程；`payment` 等到有独立扩容或分库需求时再拆。这样不会陷入 Docker 和微服务配置地狱。
 
-> 当前实现已经先把 `payment` 放到了独立进程（`payment-service`，8081），但订单、库存、支付仍共用同一个 MySQL 库和 `common` 里的实体/Mapper。这是为了先跑通“同步回调事务 + Outbox”的过渡结构， **不是严格意义的微服务**。为什么这样拆、什么时候该拆或合，见 [`docs/module-design.md`](docs/module-design.md)。
+> 当前实现是单进程模块化单体：`ledgerflow-common`（普通 jar，只放雪花 ID、单号、状态枚举）+ `ledgerflow-app`（唯一 Spring Boot 应用，默认 8080）。业务边界在 `com.ledgerflow.catalog / inventory / order / checkout / payment / outbox` 包中，共享同一个 MySQL 库和本地事务。`ledger`、`search` 与 `ledger-worker` 尚未实现，目录留空。模块边界说明见 [`docs/module-design.md`](docs/module-design.md)。
 
 ## 开发路线
 

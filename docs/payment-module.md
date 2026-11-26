@@ -2,7 +2,7 @@
 
 > 本文是支付模块的“职责说明书”，不展开全部代码细节。
 > 详细设计见 [`payment-and-mq-design.md`](payment-and-mq-design.md)，
-> 运行方式和 curl 示例见 [`payment-service/README.md`](../payment-service/README.md)，
+> 运行方式和 curl 示例见 [`payment-api.md`](payment-api.md)，
 > 模块整体划分见 [`module-design.md`](module-design.md)。
 
 ## 0. 一句话
@@ -168,17 +168,19 @@
 - `payment_order`：支付尝试与状态。
 - `payment_callback_log`：渠道回调原文与处理状态，幂等闸门。
 - `refund_order`：退款单（当前只创建，不执行）。
-- `outbox_event`：与业务事务一起写入的领域事件。
+
+`outbox_event` 由 `com.ledgerflow.outbox` 包统一追加和投递。
 
 ### 6.2 当前共享读写的表
 
-因为 `payment-service` 与订单应用共用同一个数据库，支付回调会直接读写：
+支付包与订单/库存包在同一个应用、同一个数据库内，支付回调会直接读写：
 
 - `orders`、`order_item`、`order_status_log`
 - `inventory`、`inventory_log`
 
-这是为了换取“一个本地事务完成结算”的简单性，属于**过渡设计**。
-真正拆服务后，这些表应归订单/库存服务所有，支付模块通过 API 或事件协作。
+这是为了换取“一个本地事务完成结算”的简单性，属于**当前单体的过渡写法**。
+后续可以把这些操作收敛到订单/库存包的模块 API；真正拆服务后，
+这些表应归订单/库存服务所有，支付模块通过 API 或事件协作。
 
 ### 6.3 事件
 
@@ -235,6 +237,6 @@
 
 - [`module-design.md`](module-design.md)：模块划分与拆分建议
 - [`payment-and-mq-design.md`](payment-and-mq-design.md)：支付/回调/幂等/Kafka 详细设计
-- [`payment-service/README.md`](../payment-service/README.md)：运行方式、API、curl 示例
+- [`payment-api.md`](payment-api.md)：运行方式、API、curl 示例
 - [`database-design.md`](database-design.md)：表结构与状态机
 - [`order-dto-design.md`](order-dto-design.md)：订单 DTO 与金额不变量

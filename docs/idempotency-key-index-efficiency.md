@@ -95,8 +95,8 @@ client_token VARCHAR(64) CHARACTER SET ascii COLLATE ascii_bin
 
 ## 相关文件
 
-- `../common` — `client_token` / `request_hash` 列与唯一索引
-- `../common` — 实体字段
+- `ledgerflow-app` — `client_token` / `request_hash` 列与唯一索引
+- `ledgerflow-app` — 实体字段
 - `frontend/src/components/CheckoutModal.vue` — `makeClientToken()`
 - `db/README.md` 5.14 节 — 下单幂等设计
 - `docs/order-dto-design.md` — 幂等错误码与落地顺序
